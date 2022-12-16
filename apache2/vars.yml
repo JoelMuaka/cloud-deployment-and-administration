@@ -1,0 +1,4 @@
+---
+user: "root"
+http_host: "your_domain"
+http_port: "80"

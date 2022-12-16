@@ -1,0 +1,29 @@
+---
+- name: web server installation
+  hosts: webservers
+  become: true
+  vars_files:
+    - vars.yml
+  remote_user: root
+  tasks:
+    - name: install apache php
+      apt: name={{ item }}
+      with_items:
+        - apache2
+        - php
+    - name: add a user
+      user: name={{ user }} password=! shell=/bin/fasle
+    - name: user file
+      file: path=/var/www/{{ http_host }} state=directory owner={{ user }} group={{ user }} mode=0755
+    - name: virtualhost
+      template: src=virtualhost.conf dest=/etc/apache2/sites-available/{{ http_host }}.conf
+    - name: a2ensite
+      command: a2ensite {{ http_host }}
+      args:
+        creates: /etc/apache2/sites-enabled/{{ http_host }}.conf
+      notify: restart Apache
+    - name: phpinfo
+      copy: src=phpinfo.php dest=/var/www/{{ http_host }}/phpinfo.php owner={{ user }} group={{ user }} mode=0644
+  handlers:
+    - name: restart Apache
+      service: name=apache2 state=reloaded
